@@ -1,0 +1,11 @@
+README.md
+setup.py
+distributions/Binomialdistribution.py
+distributions/GaussianDistribution.py
+distributions/GeneralDistribution.py
+distributions/__init__.py
+dolonroy_gaussian_distributions.egg-info/PKG-INFO
+dolonroy_gaussian_distributions.egg-info/SOURCES.txt
+dolonroy_gaussian_distributions.egg-info/dependency_links.txt
+dolonroy_gaussian_distributions.egg-info/not-zip-safe
+dolonroy_gaussian_distributions.egg-info/top_level.txt
