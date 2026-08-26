@@ -1,5 +1,214 @@
 Metadata-Version: 2.4
 Name: dolonroy-gaussian-distributions
-Version: 0.1
-Summary: Gaussian distributions
+Version: 0.2.2
+Summary: A lightweight Python package for calculating and visualizing **Gaussian (Normal)** and **Binomial** probability distributions. It provides simple, object-oriented classes to compute mean, standard deviation, probability density functions (PDFs), and to combine distributions using the `+` operator.
+Description-Content-Type: text/markdown
+Dynamic: description
+Dynamic: description-content-type
 Dynamic: summary
+
+# dolonroy-gaussian-distributions
+
+A lightweight Python package for calculating and visualizing **Gaussian (Normal)** and **Binomial** probability distributions. It provides simple, object-oriented classes to compute mean, standard deviation, probability density functions (PDFs), and to combine distributions using the `+` operator.
+
+## Installation
+
+```bash
+pip install dolonroy-gaussian-distributions
+```
+
+## Requirements
+
+- Python 3.x
+- `matplotlib` (used for plotting histograms and bar charts)
+
+## Package Structure
+
+The package is built around a base `Distribution` class, with `Gaussian` and `Binomial` as specialized subclasses.
+
+```
+distributions/
+├── GeneralDistribution.py   # Base Distribution class
+├── GaussianDistribution.py  # Gaussian (Normal) distribution
+└── Binomialdistribution.py  # Binomial distribution
+```
+
+---
+
+## `Distribution` (Base Class)
+
+Found in `GeneralDistribution.py`. This is the generic parent class that `Gaussian` and `Binomial` both inherit from.
+
+### Attributes
+
+| Attribute | Type | Description |
+|---|---|---|
+| `mean` | float | Mean value of the distribution |
+| `stdev` | float | Standard deviation of the distribution |
+| `data` | list | Data points read in from a file |
+
+### Constructor
+
+```python
+Distribution(mu=0, sigma=1)
+```
+
+### Methods
+
+**`read_data_file(file_name)`**
+Reads a text file containing one number per line and stores the values in `self.data`.
+
+```python
+d = Distribution()
+d.read_data_file("numbers.txt")
+```
+
+---
+
+## `Gaussian` Class
+
+Found in `GaussianDistribution.py`. Represents a Normal distribution, calculated either from raw data or from a given mean and standard deviation.
+
+### Constructor
+
+```python
+Gaussian(mu=0, sigma=1)
+```
+
+### Methods
+
+| Method | Description |
+|---|---|
+| `calculate_mean()` | Calculates the mean of `self.data` and updates `self.mean` |
+| `calculate_stdev(sample=True)` | Calculates the standard deviation of `self.data`. Set `sample=False` if the data represents a full population rather than a sample |
+| `plot_histogram()` | Plots a histogram of `self.data` |
+| `pdf(x)` | Returns the probability density function value at point `x` |
+| `plot_histogram_pdf(n_spaces=50)` | Plots a normalized histogram alongside the fitted normal curve; returns the `x` and `y` values used for the curve |
+| `read_data_file(file_name, sample=True)` | Reads data from a file and immediately recalculates mean and standard deviation |
+
+### Operators
+
+- `__add__`: Adding two `Gaussian` objects returns a new `Gaussian` whose mean is the sum of the two means, and whose standard deviation is `sqrt(stdev1² + stdev2²)`.
+- `__repr__`: Returns a string in the form `"mean {mean}, standard deviation {stdev}"`.
+
+### Example
+
+```python
+from distributions import Gaussian
+
+# Create a Gaussian distribution from a data file
+gaussian_one = Gaussian()
+gaussian_one.read_data_file("numbers.txt")
+
+print(gaussian_one.mean)
+print(gaussian_one.stdev)
+
+# Plot the histogram and fitted PDF
+gaussian_one.plot_histogram_pdf()
+
+# Combine two Gaussian distributions
+gaussian_two = Gaussian()
+gaussian_two.read_data_file("numbers_binomial.txt")
+
+gaussian_sum = gaussian_one + gaussian_two
+print(gaussian_sum)
+```
+
+---
+
+## `Binomial` Class
+
+Found in `Binomialdistribution.py`. Represents a Binomial distribution, defined by a probability of success `p` and a number of trials `n`.
+
+### Constructor
+
+```python
+Binomial(prob=0.5, size=20)
+```
+
+- `prob` — probability of a positive outcome (e.g., `0.5` for a fair coin)
+- `size` — number of trials
+
+Mean and standard deviation are calculated automatically on initialization:
+
+```
+mean = p * n
+stdev = sqrt(n * p * (1 - p))
+```
+
+### Methods
+
+| Method | Description |
+|---|---|
+| `calculate_mean()` | Calculates the mean from `p` and `n` |
+| `calculate_stdev()` | Calculates the standard deviation from `p` and `n` |
+| `replace_stats_with_data()` | Given a dataset of 0s and 1s (`self.data`), recalculates `n`, `p`, `mean`, and `stdev` from the data; returns `(p, n)` |
+| `plot_bar()` | Plots a bar chart of the number of 0s vs. 1s in the data |
+| `pdf(k)` | Returns the probability of observing exactly `k` positive outcomes |
+| `plot_bar_pdf()` | Plots the full probability density function from `k = 0` to `k = n`; returns the `x` and `y` values used |
+
+### Operators
+
+- `__add__`: Adding two `Binomial` distributions with **equal `p` values** returns a new `Binomial` with `n = n1 + n2` and the same `p`. Raises an `AssertionError` if the `p` values differ.
+- `__repr__`: Returns a string in the form `"mean {mean}, standard deviation {stdev}, p {p}, n {n}"`.
+
+### Example
+
+```python
+from distributions import Binomial
+
+# Create a binomial distribution: flipping a fair coin 25 times
+binomial_one = Binomial(0.5, 25)
+
+print(binomial_one.mean)   # 12.5
+print(binomial_one.stdev)
+
+# Probability of exactly 15 heads out of 25 flips
+print(binomial_one.pdf(15))
+
+# Visualize the distribution
+binomial_one.plot_bar_pdf()
+
+# Combine two binomial distributions with the same p
+binomial_two = Binomial(0.5, 30)
+binomial_sum = binomial_one + binomial_two
+print(binomial_sum)
+```
+
+### Reading Data into a Binomial Distribution
+
+```python
+binomial_one = Binomial()
+binomial_one.read_data_file("numbers_binomial.txt")  # a file of 0s and 1s
+binomial_one.replace_stats_with_data()
+
+print(binomial_one.p, binomial_one.n)
+print(binomial_one.mean, binomial_one.stdev)
+```
+
+---
+
+## Notes & Known Issues
+
+- `Binomialdistribution.py` imports from `.Generaldistribution`, while the actual base-class file is named `GeneralDistribution.py`. Depending on your filesystem (case-sensitive vs. case-insensitive) and package `__init__.py` setup, you may need to align these import paths and filenames exactly for the package to import cleanly.
+- `GaussianDistribution.py` imports via `from distributions.GeneralDistribution import Distribution`, which assumes a package named `distributions` on the path — make sure your package's `__init__.py` re-exports `Gaussian`, `Binomial`, and `Distribution` for the `from distributions import Gaussian` style import shown above to work.
+- `read_data_file` (both in `Distribution` and overridden in `Gaussian`) parses each line as an `int`. If your data contains decimal values, you'll want to change this to `float`.
+
+## License
+
+This project is licensed under the **Common Public License (CPL) 1.0**.
+
+Key points of the license:
+- You may freely reproduce, prepare derivative works of, distribute, and sublicense this software in both source and object code form.
+- The software is provided **"AS IS"**, without warranties of any kind, express or implied.
+- Contributors and the recipient disclaim liability for direct, indirect, incidental, or consequential damages arising from use of the software.
+- If you distribute the source code, it must remain under this same Agreement, and a copy of the Agreement must be included with each copy.
+- Commercial distributors who include this Program in a commercial offering agree to defend and indemnify other Contributors against related third-party claims.
+
+See the full license text in the `LICENSE` file included with this package for complete terms and conditions.
+
+## Author
+
+**Dolon**
+- GitHub: [@DeveloperDolon](https://github.com/DeveloperDolon)
+- Email: [dolonr718@gmail.com](mailto:dolonr718@gmail.com)
